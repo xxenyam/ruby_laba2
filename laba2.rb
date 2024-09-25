@@ -1,56 +1,41 @@
-# Функція для визначення пріоритету оператора
-def priority(op)
-  case op
-  when '+', '-'
-    1
-  when '*', '/'
-    2
-  else
-    0
-  end
-end
+class ResPolishNotation
+  # Метод для конвертації звичайного виразу у зворотну польську нотацію
+  def rpn(expression)
+    output = []
+    operators = []
+    precedence = { "+" => 1, "-" => 1, "*" => 2, "/" => 2, "**" => 3 }
 
-# Функція для перевірки, чи є символ оператором
-def operator?(char)
-  ['+', '-', '*', '/'].include?(char)
-end
-
-# Основна функція для перетворення у зворотну польську нотацію (RPN) з використанням стека
-def to_rpn(expression)
-  output = []    # Масив для вихідного виразу в RPN
-  stack = []     # Стек для операторів
-
-  # Додаємо пробіли між числами та операторами для коректного розбиття
-  expression = expression.gsub(/([+\-*\/\(\)])/,' \1 ')
-
-  expression.split.each do |token|
-    if token =~ /\d+/  # Якщо токен - число, додаємо його до виходу
-      output << token
-    elsif operator?(token)  # Якщо токен - оператор
-      while !stack.empty? && priority(stack.last) >= priority(token)
-        output << stack.pop
+    expression.scan(/\d+|[-+*\/()]/).each do |token|
+      case token
+      when /\d/
+        output.push(token)
+      when "+", "-", "*", "/", "**"
+        while !operators.empty? && precedence[operators.last] >= precedence[token]
+          output.push(operators.pop)
+        end
+        operators.push(token)
+      when "("
+        operators.push(token)
+      when ")"
+        while operators.last != "("
+          output.push(operators.pop)
+        end
+        operators.pop
       end
-      stack.push(token)  # Кладемо оператор у стек
-    elsif token == '('  # Якщо токен - відкриваюча дужка
-      stack.push(token)  # Додаємо відкриваючу дужку у стек
-    elsif token == ')'  # Якщо токен - закриваюча дужка
-      # Витягуємо оператори зі стека, поки не знайдемо відкриваючу дужку
-      while !stack.empty? && stack.last != '('
-        output << stack.pop
-      end
-      stack.pop if !stack.empty?  # Витягуємо відкриваючу дужку
     end
+
+    output.concat(operators.reverse) # Додаємо всі залишкові оператори
+    output.join(" ")
   end
-
-  # Виводимо всі оператори, що залишилися у стеку
-  output.concat(stack.reverse)
-
-  output.join(' ')  # Повертаємо результат у вигляді рядка
 end
 
-# Запитуємо у користувача введення виразу
+# Використання класу
+calculator = ResPolishNotation.new
+
 puts "Введіть математичний вираз:"
 expression = gets.chomp
 
-# Виводимо результат у вигляді RPN
-puts "Зворотна польська нотація: #{to_rpn(expression)}"
+# Конвертуємо у зворотну польську нотацію
+rpn_exp = calculator.rpn(expression)
+puts "Зворотна польська нотація: #{rpn_exp}"
+
